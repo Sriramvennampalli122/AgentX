@@ -40,7 +40,6 @@ export default function AgentXDashboard() {
             elapsed: (session.elapsedMs! / 1000).toFixed(1)
           });
         }
-        // Auto-switch mode based on session context if we stored it (not stored currently, so we stick to active selection)
       }
     } else {
       setMessages([]);
@@ -178,7 +177,6 @@ export default function AgentXDashboard() {
       </div>
 
       <main className="flex-1 flex flex-col relative overflow-hidden">
-        {/* Engineering Header */}
         <header className="flex h-16 items-center justify-between px-8 border-b border-white/5 bg-black/40 backdrop-blur-xl z-20">
           <div className="flex items-center gap-12">
             <div className="lg:hidden">
@@ -227,15 +225,6 @@ export default function AgentXDashboard() {
             <div className="h-full overflow-y-auto custom-scrollbar">
               <div className="min-h-full flex flex-col items-center justify-center p-12 max-w-6xl mx-auto space-y-16">
                 <div className="text-center space-y-6 animate-in fade-in slide-in-from-top-4 duration-1000">
-                  <div className={cn(
-                    "inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 transition-colors duration-500",
-                    activeEngine === 'research' ? "text-primary border-primary/20" : "text-accent border-accent/20"
-                  )}>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]">
-                      {activeEngine === 'research' ? 'Autonomous Research Protocol Active' : 'Sandboxed Debugging Engine Ready'}
-                    </span>
-                  </div>
                   <h1 className="font-headline text-5xl font-bold tracking-tight text-white max-w-3xl mx-auto leading-[1.1]">
                     {activeEngine === 'research' ? (
                       <>Global <span className="text-primary italic font-light">Intelligence</span> & Synthetic Reasoning</>
