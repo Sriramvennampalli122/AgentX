@@ -36,7 +36,7 @@ Operational Guidelines:
 1. **Plan First**: Break the task into logical steps.
 2. **Execute with Tools**: Use tools whenever you need external data or complex processing.
 3. **Verify**: Always check tool outputs for errors or inconsistencies.
-4. **Synthesize**: Combine all findings into a professional, well-formatted report.
+4. **Report**: Compile all findings into a professional, well-formatted report.
 5. **Finality**: Once the task is complete, prefix your conclusion with "FINAL ANSWER:".
 
 Tool Usage:
@@ -112,9 +112,7 @@ const calculateTool = ai.defineTool(
   },
   async (input) => {
     try {
-      // Basic sanitization
       const cleanExpr = input.expression.replace(/[^-0-9+*/().%^ \t]/g, '');
-      // Handle power operator
       const finalExpr = cleanExpr.replace(/\^/g, '**');
       
       const result = new Function(`return (${finalExpr})`)();
@@ -174,10 +172,8 @@ const autonomousAgentExecutionFlow = ai.defineFlow(
           config: { temperature: 0.1 },
         });
 
-        // Add the model's message (which might contain tool requests) to history
         history.push(response.message);
 
-        // Check for tool calls
         const toolRequests = response.message.parts.filter(p => !!p.toolRequest);
         
         if (toolRequests.length > 0) {
@@ -185,7 +181,6 @@ const autonomousAgentExecutionFlow = ai.defineFlow(
           
           const toolResponseParts = [];
           
-          // Execute all tool calls
           for (const part of toolRequests) {
             if (!part.toolRequest) continue;
             
@@ -210,7 +205,6 @@ const autonomousAgentExecutionFlow = ai.defineFlow(
             }
           }
 
-          // Add tool responses back to history with role 'tool'
           if (toolResponseParts.length > 0) {
             history.push({
               role: 'tool',
@@ -218,7 +212,6 @@ const autonomousAgentExecutionFlow = ai.defineFlow(
             });
           }
         } else {
-          // No more tool calls, check for final answer
           const textOutput = response.text;
           if (textOutput.includes('FINAL ANSWER:')) {
             finalAnswer = textOutput.split('FINAL ANSWER:')[1].trim();
@@ -226,8 +219,6 @@ const autonomousAgentExecutionFlow = ai.defineFlow(
           } else if (i === MAX_AGENT_ITERATIONS - 1) {
             finalAnswer = textOutput.trim();
           } else if (textOutput.length > 0) {
-            // Model produced text but no tool calls and no final answer tag
-            // We'll let it iterate once more, but if it keeps doing this, we'll stop
             if (i > MAX_AGENT_ITERATIONS / 2) {
                finalAnswer = textOutput.trim();
                break;

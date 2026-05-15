@@ -6,10 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { 
   Brain, 
-  Wrench, 
   CheckCircle, 
   Search, 
-  Code, 
   Calculator, 
   FileText, 
   Copy, 
@@ -17,7 +15,6 @@ import {
   ChevronRight,
   Terminal,
   Layers,
-  Sparkles,
   Zap,
   Box,
   Braces
@@ -81,7 +78,7 @@ export function ExecutionPanel({
               className="relative h-14 rounded-none border-b-2 border-transparent bg-transparent px-2 text-[10px] font-bold tracking-[0.2em] uppercase transition-all data-[state=active]:border-white/50 data-[state=active]:text-white"
             >
               <Box className="mr-2.5 h-3.5 w-3.5" />
-              Synthesis
+              Final Report
             </TabsTrigger>
           </TabsList>
         </div>
@@ -135,7 +132,7 @@ export function ExecutionPanel({
                       if (lower.includes('web')) return { icon: Search, color: 'text-blue-400', label: 'Web Intelligence' };
                       if (lower.includes('code')) return { icon: Braces, color: 'text-purple-400', label: 'Logic Sandbox' };
                       if (lower.includes('calc')) return { icon: Calculator, color: 'text-orange-400', label: 'Precision Compute' };
-                      return { icon: FileText, color: 'text-green-400', label: 'Synthesis Utility' };
+                      return { icon: FileText, color: 'text-green-400', label: 'Utility Execution' };
                     };
 
                     const config = getToolConfig(toolName);
@@ -185,8 +182,8 @@ export function ExecutionPanel({
                       <Activity className="h-16 w-16 text-primary/40 relative z-10 animate-pulse stroke-[1px]" />
                     </div>
                     <div className="text-center space-y-3">
-                      <p className="text-[10px] font-bold tracking-[0.5em] uppercase text-white/40 animate-pulse">Converging Logic Points</p>
-                      <p className="text-[11px] text-white/20 tracking-widest font-body">Synthesizing multi-source verification...</p>
+                      <p className="text-[10px] font-bold tracking-[0.5em] uppercase text-white/40 animate-pulse">Processing Outcome</p>
+                      <p className="text-[11px] text-white/20 tracking-widest font-body">Assembling verified findings...</p>
                     </div>
                   </div>
                 ) : (
@@ -194,10 +191,10 @@ export function ExecutionPanel({
                     <div className="flex items-center justify-between pb-10 border-b border-white/5">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-primary/60">
-                          <Zap className="h-3 w-3" />
-                          <span className="text-[10px] font-bold uppercase tracking-[0.4em]">Synthesis Outcome</span>
+                          <CheckCircle className="h-3 w-3" />
+                          <span className="text-[10px] font-bold uppercase tracking-[0.4em]">Protocol Success</span>
                         </div>
-                        <h2 className="font-headline text-4xl font-bold text-white tracking-tight leading-tight">Protocol Report</h2>
+                        <h2 className="font-headline text-4xl font-bold text-white tracking-tight leading-tight">Summary of Findings</h2>
                       </div>
                       <Button variant="outline" size="sm" onClick={() => copyToClipboard(finalAnswer.content)} className="h-11 bg-white/5 border-white/10 hover:bg-white/10 text-[10px] font-bold tracking-[0.2em] px-8 rounded-xl transition-all">
                         <Copy className="h-3.5 w-3.5 mr-2.5" />
@@ -210,7 +207,6 @@ export function ExecutionPanel({
                         if (line.startsWith('###')) return <h3 key={i} className="text-xl font-bold pt-8 text-white/90 tracking-tight flex items-center gap-3"><ChevronRight className="h-4 w-4 text-primary/50" /> {line.replace('###', '').trim()}</h3>;
                         if (line.startsWith('##')) return <h2 key={i} className="text-2xl font-bold pt-12 text-white tracking-tight border-b border-white/5 pb-4 mb-6">{line.replace('##', '').trim()}</h2>;
                         if (line.startsWith('```')) {
-                          // Very basic code block handling for preview
                           return null; 
                         }
                         if (line.trim().startsWith('-') || line.trim().startsWith('•')) {
@@ -223,7 +219,6 @@ export function ExecutionPanel({
                         }
                         if (line.trim() === '') return <div key={i} className="h-4" />;
                         
-                        // Handle bold text
                         const parts = line.split(/(\*\*.*?\*\*)/g);
                         return (
                           <p key={i}>

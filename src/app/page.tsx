@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { sessionStore, type Session, type Message } from '@/lib/session-store';
 import { executeAgentTask, executeCodeTask } from './actions/agent';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Code, Calculator, FileText, Sparkles, ShieldCheck, Cpu, Terminal, Beaker, Globe } from 'lucide-react';
+import { Search, Code, Calculator, FileText, ShieldCheck, Cpu, Globe, Beaker } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
@@ -83,7 +83,7 @@ export default function AgentXDashboard() {
         iterations = result.iterationCount;
       } else {
         const result = await executeCodeTask(task);
-        finalAnswer = `### Generated Code\n\`\`\`javascript\n${result.generatedCode}\n\`\`\`\n\n### Execution Results\n${result.executionResult.success ? '**Success**' : '**Failure**'}\n- Time: ${result.executionResult.executionTime}ms\n- Output:\n\`\`\`\n${result.executionResult.output}\n\`\`\``;
+        finalAnswer = `### Outcome\n\`\`\`javascript\n${result.generatedCode}\n\`\`\`\n\n### Execution Results\n${result.executionResult.success ? '**Success**' : '**Failure**'}\n- Time: ${result.executionResult.executionTime}ms\n- Output:\n\`\`\`\n${result.executionResult.output}\n\`\`\``;
         if (result.executionResult.error) {
           finalAnswer += `\n\n### Error\n\`${result.executionResult.error}\``;
         }
@@ -227,14 +227,14 @@ export default function AgentXDashboard() {
                 <div className="text-center space-y-6 animate-in fade-in slide-in-from-top-4 duration-1000">
                   <h1 className="font-headline text-5xl font-bold tracking-tight text-white max-w-3xl mx-auto leading-[1.1]">
                     {activeEngine === 'research' ? (
-                      <>Global <span className="text-primary italic font-light">Intelligence</span> & Synthetic Reasoning</>
+                      <>Global <span className="text-primary italic font-light">Intelligence</span> & Outcomes</>
                     ) : (
-                      <>Algorithmic <span className="text-accent italic font-light">Laboratory</span> & Logic Synthesis</>
+                      <>Algorithmic <span className="text-accent italic font-light">Laboratory</span> & Logic</>
                     )}
                   </h1>
                   <p className="text-sm text-white/30 max-w-xl mx-auto font-body leading-relaxed">
                     {activeEngine === 'research' 
-                      ? 'Deploy autonomous agents to crawl, analyze, and synthesize findings into high-precision outcome reports.'
+                      ? 'Deploy autonomous agents to crawl, analyze, and deliver high-precision reports.'
                       : 'Generate, audit, and execute JavaScript logic in secure, isolated environments for rapid algorithmic prototyping.'}
                   </p>
                 </div>
