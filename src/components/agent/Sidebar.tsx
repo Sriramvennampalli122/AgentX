@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Logo } from './Logo';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, MessageSquare, Trash2, Clock } from 'lucide-react';
+import { Plus, Trash2, Clock } from 'lucide-react';
 import { sessionStore, type Session } from '@/lib/session-store';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -19,8 +19,10 @@ export function Sidebar({
   onNewTask: () => void;
 }) {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setSessions(sessionStore.getSessions());
   }, [activeSessionId]);
 
@@ -30,6 +32,10 @@ export function Sidebar({
     setSessions(sessionStore.getSessions());
     if (activeSessionId === id) onNewTask();
   };
+
+  if (!mounted) return (
+    <div className="flex h-screen w-full flex-col bg-sidebar border-r border-sidebar-border" />
+  );
 
   return (
     <div className="flex h-screen w-full flex-col bg-sidebar border-r border-sidebar-border">
@@ -96,11 +102,11 @@ export function Sidebar({
       <div className="p-4 mt-auto border-t border-sidebar-border">
         <div className="flex items-center gap-3 px-2">
           <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-xs font-bold text-white">
-            JD
+            AX
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate text-sidebar-foreground">Explorer User</p>
-            <p className="text-xs text-muted-foreground truncate">Free Tier</p>
+            <p className="text-sm font-medium truncate text-sidebar-foreground">Operator</p>
+            <p className="text-xs text-muted-foreground truncate">System Active</p>
           </div>
         </div>
       </div>

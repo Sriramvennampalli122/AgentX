@@ -7,7 +7,7 @@ import { ExecutionPanel } from '@/components/agent/ExecutionPanel';
 import { Logo } from '@/components/agent/Logo';
 import { sessionStore, type Session, type Message } from '@/lib/session-store';
 import { executeAgentTask } from './actions/agent';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Search, Code, Calculator, FileText, Sparkles, Terminal } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -16,6 +16,12 @@ export default function AgentXDashboard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [stats, setStats] = useState<{ tools: number; iterations: number; elapsed: string }>();
+  const [mounted, setMounted] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Load session messages when active session changes
   useEffect(() => {
@@ -55,7 +61,6 @@ export default function AgentXDashboard() {
     const startTime = Date.now();
 
     try {
-      // Simulate "thinking" steps for UI feedback as the actual flow doesn't stream yet
       const initialMsgs: Message[] = [
         { id: 't1', role: 'system', content: `Task received: ${task}`, type: 'thinking', timestamp: Date.now() },
         { id: 't2', role: 'system', content: 'Analyzing multi-step execution path...', type: 'thinking', timestamp: Date.now() + 500 }
@@ -127,6 +132,8 @@ export default function AgentXDashboard() {
     </div>
   );
 
+  if (!mounted) return null;
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <div className="w-[280px] hidden md:block">
@@ -138,7 +145,6 @@ export default function AgentXDashboard() {
       </div>
 
       <main className="flex-1 flex flex-col relative overflow-hidden">
-        {/* Header (Mobile Logo Only) */}
         <div className="md:hidden p-4 border-b border-border flex justify-between items-center bg-card/50">
           <Logo />
           <button onClick={() => setActiveSessionId(null)} className="p-2 rounded-lg bg-white/5">
