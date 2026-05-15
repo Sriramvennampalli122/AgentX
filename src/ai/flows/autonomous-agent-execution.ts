@@ -166,56 +166,77 @@ const autonomousAgentExecutionFlow = ai.defineFlow(
     for (let i = 0; i < MAX_AGENT_ITERATIONS; i++) {
       iterationCount++;
 
-      const response = await ai.generate({
-        model: 'googleai/gemini-1.5-flash',
-        messages: history,
-        tools,
-        config: { temperature: 0.1 },
-      });
+      try {
+        const response = await ai.generate({
+          model: 'googleai/gemini-1.5-flash',
+          messages: history,
+          tools,
+          config: { temperature: 0.1 },
+        });
 
-      // Add the model's message to history
-      history.push(response.message);
+        // Add the model's message (which might contain tool requests) to history
+        history.push(response.message);
 
-      // Check for tool calls
-      const toolCalls = response.message.parts.filter(p => !!p.toolRequest);
-      
-      if (toolCalls.length > 0) {
-        toolCallCount += toolCalls.length;
+        // Check for tool calls
+        const toolRequests = response.message.parts.filter(p => !!p.toolRequest);
         
-        // Execute all tool calls
-        for (const part of toolCalls) {
-          if (!part.toolRequest) continue;
+        if (toolRequests.length > 0) {
+          toolCallCount += toolRequests.length;
           
-          const tool = tools.find(t => t.name === part.toolRequest!.name);
-          if (tool) {
-            const result = await tool.execute(part.toolRequest.input);
-            history.push({
-              role: 'user',
-              content: [{
+          const toolResponseParts = [];
+          
+          // Execute all tool calls
+          for (const part of toolRequests) {
+            if (!part.toolRequest) continue;
+            
+            const tool = tools.find(t => t.name === part.toolRequest!.name);
+            if (tool) {
+              const result = await tool.execute(part.toolRequest.input);
+              toolResponseParts.push({
                 toolResponse: {
                   name: part.toolRequest.name,
                   ref: part.toolRequest.ref,
                   output: result,
                 },
-              }],
+              });
+            } else {
+              toolResponseParts.push({
+                toolResponse: {
+                  name: part.toolRequest.name,
+                  ref: part.toolRequest.ref,
+                  output: `Error: Tool ${part.toolRequest.name} not found.`,
+                },
+              });
+            }
+          }
+
+          // Add tool responses back to history with role 'tool'
+          if (toolResponseParts.length > 0) {
+            history.push({
+              role: 'tool',
+              content: toolResponseParts,
             });
           }
-        }
-      } else {
-        // No more tool calls, check for final answer
-        const textOutput = response.text;
-        if (textOutput.includes('FINAL ANSWER:')) {
-          finalAnswer = textOutput.split('FINAL ANSWER:')[1].trim();
-          break;
-        } else if (i === MAX_AGENT_ITERATIONS - 1) {
-          finalAnswer = textOutput.trim();
         } else {
-          // If no tool call and no FINAL ANSWER, model might just be talking, 
-          // continue loop or break if it seems complete
-          if (textOutput.length > 50) {
+          // No more tool calls, check for final answer
+          const textOutput = response.text;
+          if (textOutput.includes('FINAL ANSWER:')) {
+            finalAnswer = textOutput.split('FINAL ANSWER:')[1].trim();
+            break;
+          } else if (i === MAX_AGENT_ITERATIONS - 1) {
             finalAnswer = textOutput.trim();
+          } else if (textOutput.length > 0) {
+            // Model produced text but no tool calls and no final answer tag
+            // We'll let it iterate once more, but if it keeps doing this, we'll stop
+            if (i > MAX_AGENT_ITERATIONS / 2) {
+               finalAnswer = textOutput.trim();
+               break;
+            }
           }
         }
+      } catch (error: any) {
+        console.error('Iteration error:', error);
+        throw new Error(`Agent reasoning failed at step ${iterationCount}: ${error.message}`);
       }
     }
 
