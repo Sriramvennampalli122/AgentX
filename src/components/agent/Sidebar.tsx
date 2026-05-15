@@ -4,10 +4,21 @@ import { useEffect, useState } from 'react';
 import { Logo } from './Logo';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Trash2, Clock, Command, Terminal, Activity } from 'lucide-react';
+import { Plus, Trash2, Clock, Command, Terminal, Activity, Eraser } from 'lucide-react';
 import { sessionStore, type Session } from '@/lib/session-store';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function Sidebar({ 
   activeSessionId, 
@@ -33,36 +44,63 @@ export function Sidebar({
     if (activeSessionId === id) onNewTask();
   };
 
+  const handleClearAll = () => {
+    sessionStore.clearAll();
+    setSessions([]);
+    onNewTask();
+  };
+
   if (!mounted) return (
-    <div className="flex h-screen w-full flex-col bg-sidebar border-r border-sidebar-border" />
+    <div className="flex h-screen w-full flex-col bg-[#070708] border-r border-white/5" />
   );
 
   return (
-    <div className="flex h-screen w-full flex-col bg-sidebar border-r border-white/5 relative z-30">
-      <div className="p-8">
-        <Logo className="mb-10" />
+    <div className="flex h-screen w-full flex-col bg-[#070708] border-r border-white/5 relative z-30">
+      <div className="p-6">
+        <Logo className="mb-8" />
         <Button 
           onClick={onNewTask}
-          className="w-full justify-start gap-3 bg-primary hover:bg-primary/90 glow-primary font-bold text-xs uppercase tracking-widest py-6 rounded-xl border border-white/10"
+          className="w-full justify-start gap-3 bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(99,102,241,0.2)] font-bold text-[11px] uppercase tracking-[0.2em] py-6 rounded-xl border border-white/10"
         >
           <Plus className="h-4 w-4" />
-          New Protocol
+          Start Session
         </Button>
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="px-8 mb-4 flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
-            Log History
+        <div className="px-6 mb-4 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/30">
+            Internal Logs
           </span>
-          <Terminal className="h-3 w-3 text-muted-foreground/20" />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="text-white/20 hover:text-red-400 transition-colors" title="Clear all history">
+                <Eraser className="h-3.5 w-3.5" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-card border-white/10 text-white">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-xl font-headline font-bold">Wipe Terminal History?</AlertDialogTitle>
+                <AlertDialogDescription className="text-white/60 font-body">
+                  This will permanently delete all stored reasoning logs and session data from your local storage.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClearAll} className="bg-red-500 hover:bg-red-600 text-white">Confirm Wipe</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
+        
         <ScrollArea className="flex-1">
           <div className="px-4 space-y-2">
             {sessions.length === 0 ? (
-              <div className="px-4 py-12 text-center space-y-3 opacity-30">
-                <Command className="h-8 w-8 mx-auto stroke-[1]" />
-                <p className="text-[10px] font-bold uppercase tracking-widest">Archive empty</p>
+              <div className="px-4 py-16 text-center space-y-3">
+                <div className="h-10 w-10 bg-white/[0.02] rounded-full flex items-center justify-center mx-auto border border-white/5">
+                  <Command className="h-5 w-5 text-white/10" />
+                </div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/20">Standby Mode</p>
               </div>
             ) : (
               sessions.map((session) => (
@@ -72,32 +110,31 @@ export function Sidebar({
                   className={cn(
                     "group relative flex cursor-pointer items-center gap-4 rounded-xl px-4 py-4 transition-all border border-transparent",
                     activeSessionId === session.id 
-                      ? "bg-white/[0.05] border-white/5 shadow-xl" 
-                      : "hover:bg-white/[0.02] hover:border-white/5"
+                      ? "bg-white/[0.04] border-white/5" 
+                      : "hover:bg-white/[0.02] hover:border-white/[0.04]"
                   )}
                 >
                   <div className={cn(
-                    "h-2 w-2 rounded-full shrink-0 shadow-sm",
-                    session.status === 'complete' ? "bg-green-500" : 
-                    session.status === 'error' ? "bg-red-500" : "bg-amber-500 pulse-slow"
+                    "h-1.5 w-1.5 rounded-full shrink-0",
+                    session.status === 'complete' ? "bg-green-500/80" : 
+                    session.status === 'error' ? "bg-red-500/80" : "bg-amber-500/80 animate-pulse"
                   )} />
-                  <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex-1 min-w-0 space-y-0.5">
                     <p className={cn(
-                      "text-sm font-bold truncate tracking-tight transition-colors",
-                      activeSessionId === session.id ? "text-white" : "text-sidebar-foreground"
+                      "text-xs font-medium truncate transition-colors",
+                      activeSessionId === session.id ? "text-white" : "text-white/50"
                     )}>
                       {session.task}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground/50 font-medium">
-                      <Clock className="h-3 w-3" />
+                    <div className="flex items-center gap-2 text-[9px] text-white/20 font-bold uppercase tracking-widest">
                       {formatDistanceToNow(session.createdAt)} ago
                     </div>
                   </div>
                   <button
                     onClick={(e) => handleDelete(e, session.id)}
-                    className="opacity-0 group-hover:opacity-100 p-2 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-400 transition-all"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
               ))
@@ -106,21 +143,16 @@ export function Sidebar({
         </ScrollArea>
       </div>
 
-      <div className="p-6 mt-auto border-t border-white/5 bg-black/20">
-        <div className="flex items-center gap-4 px-2">
-          <div className="relative">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-white/10 to-white/5 flex items-center justify-center text-[10px] font-bold text-white border border-white/10">
-              OP
-            </div>
-            <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#0a0a0b] flex items-center justify-center">
-              <div className="h-2 w-2 rounded-full bg-green-500" />
-            </div>
+      <div className="p-6 mt-auto border-t border-white/5 bg-black/40">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white/40">
+            ID
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-white tracking-wide uppercase">Operator 01</p>
+            <p className="text-[10px] font-bold text-white tracking-widest uppercase">Verified Operator</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <Activity className="h-3 w-3 text-primary animate-pulse" />
-              <p className="text-[10px] text-muted-foreground/60 font-medium tracking-wider uppercase">System Stable</p>
+              <div className="h-1 w-1 rounded-full bg-green-500" />
+              <p className="text-[9px] text-white/30 font-bold tracking-widest uppercase">Encryption Active</p>
             </div>
           </div>
         </div>

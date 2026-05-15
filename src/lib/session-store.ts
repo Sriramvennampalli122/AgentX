@@ -18,8 +18,6 @@ export interface Session {
   elapsedMs?: number;
 }
 
-// In-memory store for demonstration purposes as we can't guarantee a real Firestore connection in this sandbox
-// In a real production app, these would be Firestore calls.
 const SESSIONS_KEY = 'agentx_sessions';
 const MESSAGES_KEY_PREFIX = 'agentx_messages_';
 
@@ -47,6 +45,13 @@ export const sessionStore = {
     const sessions = sessionStore.getSessions().filter(s => s.id !== id);
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
     localStorage.removeItem(`${MESSAGES_KEY_PREFIX}${id}`);
+  },
+
+  clearAll: () => {
+    if (typeof window === 'undefined') return;
+    const sessions = sessionStore.getSessions();
+    sessions.forEach(s => localStorage.removeItem(`${MESSAGES_KEY_PREFIX}${s.id}`));
+    localStorage.removeItem(SESSIONS_KEY);
   },
 
   saveMessage: (sessionId: string, message: Message) => {

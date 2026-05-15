@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { sessionStore, type Session, type Message } from '@/lib/session-store';
 import { executeAgentTask } from './actions/agent';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Code, Calculator, FileText, Sparkles, Terminal, Activity, Zap } from 'lucide-react';
+import { Search, Code, Calculator, FileText, Sparkles, Terminal, Activity, Zap, ShieldCheck, Cpu } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 
 export default function AgentXDashboard() {
@@ -24,7 +24,6 @@ export default function AgentXDashboard() {
     setMounted(true);
   }, []);
 
-  // Load session messages when active session changes
   useEffect(() => {
     if (activeSessionId) {
       const msgs = sessionStore.getMessages(activeSessionId);
@@ -63,8 +62,8 @@ export default function AgentXDashboard() {
 
     try {
       const initialMsgs: Message[] = [
-        { id: 't1', role: 'system', content: `Task received: ${task}`, type: 'thinking', timestamp: Date.now() },
-        { id: 't2', role: 'system', content: 'Initializing multi-step execution protocol...', type: 'thinking', timestamp: Date.now() + 500 }
+        { id: 't1', role: 'system', content: `Executing task: ${task}`, type: 'thinking', timestamp: Date.now() },
+        { id: 't2', role: 'system', content: 'Allocating reasoning resources...', type: 'thinking', timestamp: Date.now() + 500 }
       ];
       initialMsgs.forEach(m => sessionStore.saveMessage(sessionId, m));
       setMessages(initialMsgs);
@@ -99,12 +98,12 @@ export default function AgentXDashboard() {
         elapsed: (elapsedMs / 1000).toFixed(1)
       });
       
-      toast({ title: "Task Synthesis Complete", description: "Protocol results delivered to terminal." });
+      toast({ title: "Task Success", description: "Reasoning loop completed successfully." });
     } catch (error: any) {
       const errorMsg: Message = {
         id: 'e1',
         role: 'system',
-        content: error.message || 'The agent failed to complete the task.',
+        content: error.message || 'The reasoning loop encountered an unexpected error.',
         type: 'error',
         timestamp: Date.now()
       };
@@ -112,32 +111,37 @@ export default function AgentXDashboard() {
       setMessages(prev => [...prev, errorMsg]);
       
       sessionStore.saveSession({ ...newSession, status: 'error' });
-      toast({ variant: "destructive", title: "Execution Failure", description: error.message });
+      toast({ variant: "destructive", title: "Internal Failure", description: error.message });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const ExampleCard = ({ icon: Icon, title, desc, prompt }: any) => (
+  const PresetCard = ({ icon: Icon, title, desc, prompt }: any) => (
     <div 
       onClick={() => runTask(prompt)}
-      className="terminal-card group p-8 cursor-pointer hover:border-primary/50 hover:bg-white/[0.04] transition-all border-white/5"
+      className="group relative p-6 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all cursor-pointer overflow-hidden"
     >
-      <div className="flex items-center gap-5 mb-5">
-        <div className="p-3 rounded-xl bg-white/5 text-primary group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-300 ring-1 ring-white/10 group-hover:ring-primary/30">
-          <Icon className="h-6 w-6" />
-        </div>
-        <h4 className="font-headline font-bold text-lg tracking-wide text-white group-hover:text-primary transition-colors uppercase">{title}</h4>
+      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+        <Icon className="h-12 w-12" />
       </div>
-      <p className="text-sm text-muted-foreground/80 leading-relaxed font-body italic">"{desc}"</p>
+      <div className="relative z-10 space-y-4">
+        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 ring-1 ring-primary/20">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <h4 className="font-headline font-bold text-white text-sm tracking-widest uppercase">{title}</h4>
+          <p className="text-[11px] text-white/40 mt-1 font-body leading-relaxed">{desc}</p>
+        </div>
+      </div>
     </div>
   );
 
   if (!mounted) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0a0a0b]">
-      <div className="w-[300px] hidden md:block">
+    <div className="flex h-screen overflow-hidden bg-[#050506]">
+      <div className="w-[280px] hidden lg:block">
         <Sidebar 
           activeSessionId={activeSessionId} 
           onSelectSession={setActiveSessionId}
@@ -146,75 +150,75 @@ export default function AgentXDashboard() {
       </div>
 
       <main className="flex-1 flex flex-col relative overflow-hidden">
-        {/* Top Navigation Bar */}
-        <div className="flex h-16 items-center justify-between px-8 border-b border-white/5 bg-card/10 backdrop-blur-md relative z-20">
-          <div className="md:hidden">
+        {/* Professional Header */}
+        <header className="flex h-16 items-center justify-between px-8 border-b border-white/5 bg-black/40 backdrop-blur-xl z-20">
+          <div className="lg:hidden">
             <Logo />
           </div>
-          <div className="hidden md:flex items-center gap-6">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
-              <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest">System Online</span>
+          <div className="hidden lg:flex items-center gap-8">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-4 w-4 text-green-500/80" />
+              <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Security: Level 5</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-              <Zap className="h-3 w-3 text-primary" />
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">v2.5 Reasoning</span>
+            <div className="flex items-center gap-3">
+              <Cpu className="h-4 w-4 text-primary/80" />
+              <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Neural Engine: v2.5.1</span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="text-[10px] font-bold tracking-widest uppercase hover:bg-white/5" onClick={() => setActiveSessionId(null)}>
-              Reset Terminal
+          <div className="flex items-center gap-6">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 hover:text-white transition-colors"
+              onClick={() => setActiveSessionId(null)}
+            >
+              Reset Workbench
             </Button>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-accent glow-primary flex items-center justify-center text-[10px] font-bold text-white border border-white/20">
+            <div className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white/60">
               AX
             </div>
           </div>
-        </div>
+        </header>
 
         <div className="flex-1 overflow-hidden relative">
           {(!activeSessionId && messages.length === 0) ? (
-            <div className="h-full flex flex-col items-center justify-center p-12 text-center max-w-6xl mx-auto">
-              <div className="mb-16 space-y-6 animate-in fade-in zoom-in duration-700">
-                <div className="relative inline-block">
-                  <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-150" />
-                  <Terminal className="h-20 w-20 text-primary mx-auto mb-6 relative z-10 drop-shadow-2xl" />
-                  <div className="absolute -top-3 -right-3 bg-accent rounded-full p-2 glow-accent animate-bounce">
-                    <Sparkles className="h-5 w-5 text-white" />
-                  </div>
+            <div className="h-full flex flex-col items-center justify-center p-8 max-w-5xl mx-auto">
+              <div className="text-center mb-16 space-y-6 animate-in fade-in slide-in-from-top-4 duration-1000">
+                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-primary mb-4">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Autonomous Terminal Active</span>
                 </div>
-                <div className="space-y-3">
-                  <h1 className="font-headline text-6xl font-black tracking-tight text-white mb-2 text-gradient">
-                    PROTOCOL INITIATED
-                  </h1>
-                  <p className="text-xl text-muted-foreground/60 max-w-2xl mx-auto font-body tracking-wide">
-                    Autonomous reasoning terminal active. Assign a task or select an operational preset to begin multi-agent orchestration.
-                  </p>
-                </div>
+                <h1 className="font-headline text-5xl font-bold tracking-tight text-white max-w-2xl mx-auto">
+                  Precision <span className="text-primary italic font-light">Reasoning</span> for Complex Workflows
+                </h1>
+                <p className="text-sm text-white/40 max-w-xl mx-auto font-body leading-relaxed">
+                  Leverage a multi-tool autonomous agent capable of web intelligence, sandboxed code execution, and high-precision calculations.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full animate-in slide-in-from-bottom-8 duration-1000">
-                <ExampleCard 
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                <PresetCard 
                   icon={Search} 
                   title="Market Intel" 
-                  desc="Analyze today's top 3 AI news stories and synthesize their global impact." 
+                  desc="Analyze current trends and synthesize global impact reports." 
                   prompt="Search for today's top AI news and summarize the 3 biggest stories" 
                 />
-                <ExampleCard 
+                <PresetCard 
                   icon={Code} 
-                  title="Binary Sieve" 
-                  desc="Engineers primes up to 200 using optimized algorithms and counts them." 
+                  title="Logic Sandbox" 
+                  desc="Execute complex algorithms in secure environments." 
                   prompt="Write JavaScript to find all prime numbers up to 200 and count them" 
                 />
-                <ExampleCard 
+                <PresetCard 
                   icon={Calculator} 
-                  title="Fiscal Projection" 
-                  desc="Projects $10k portfolio growth at 9% for 15 years with detailed formulaic logic." 
+                  title="Compute Engine" 
+                  desc="High-precision mathematical formula projections." 
                   prompt="Calculate: If I invest $10,000 at 9% annual return for 15 years, what's the final amount? Show the formula." 
                 />
-                <ExampleCard 
+                <PresetCard 
                   icon={FileText} 
-                  title="Stack Audit" 
-                  desc="Audits LangChain vs LlamaIndex for production RAG pipeline efficiency." 
+                  title="Tech Audit" 
+                  desc="Compare architectures and audit stack efficiencies." 
                   prompt="Search for LangChain vs LlamaIndex comparison and tell me which is better for RAG pipelines" 
                 />
               </div>
@@ -224,7 +228,9 @@ export default function AgentXDashboard() {
           )}
         </div>
 
-        <TaskInput onRun={runTask} isLoading={isLoading} />
+        <div className="pb-8 pt-4">
+          <TaskInput onRun={runTask} isLoading={isLoading} />
+        </div>
       </main>
       <Toaster />
     </div>
