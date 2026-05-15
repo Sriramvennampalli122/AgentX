@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An autonomous AI agent that plans and executes tasks using a suite of tools.
@@ -30,31 +29,33 @@ export type AutonomousAgentExecutionOutput = z.infer<typeof AutonomousAgentExecu
 
 // --- Constants ---
 
-const SYSTEM_PROMPT = `You are AgentX, a powerful AI agent with access to tools.
-Think carefully before acting. For each task:
-1. Analyze what information or computation is needed
-2. Use tools to gather data or run calculations
-3. Synthesize results into a clear, formatted answer
-4. End your response with: FINAL ANSWER: [your complete answer]
+const SYSTEM_PROMPT = `You are AgentX, a sophisticated autonomous reasoning engine. 
+Your goal is to complete the user's task with high precision.
 
-Tool selection rules:
-- web_search: for facts, news, current data, URLs
-- run_code: for algorithms, data processing, sequences, sorting
-- calculate: for math expressions and formulas
-- summarize: to condense long content before reasoning
+Operational Guidelines:
+1. **Plan First**: Break the task into logical steps.
+2. **Execute with Tools**: Use tools whenever you need external data or complex processing.
+3. **Verify**: Always check tool outputs for errors or inconsistencies.
+4. **Synthesize**: Combine all findings into a professional, well-formatted report.
+5. **Finality**: Once the task is complete, prefix your conclusion with "FINAL ANSWER:".
 
-Always verify tool results before including in your final answer.
-Format final answers with clear headings and bullet points.`;
+Tool Usage:
+- web_search: Use for real-world facts, current news, and general knowledge.
+- run_code: Use for algorithmic logic, sequence generation, or data manipulation.
+- calculate: Use for specific mathematical expressions and formulas.
+- summarize: Use to condense large amounts of text from search results before reasoning.
 
-const MAX_AGENT_ITERATIONS = 15;
-const CODE_MAX_OUTPUT_CHARS = 2000;
+Always strive for clarity and depth in your final response.`;
+
+const MAX_AGENT_ITERATIONS = 12;
+const CODE_MAX_OUTPUT_CHARS = 2500;
 
 // --- Tools ---
 
 const webSearchTool = ai.defineTool(
   {
     name: 'web_search',
-    description: 'Search the web for current information, news, facts, URLs, and real-world data. Use for anything requiring up-to-date or external knowledge.',
+    description: 'Search the web for up-to-the-minute information, facts, and URLs.',
     inputSchema: z.object({
       query: z.string().describe('The search query'),
     }),
@@ -64,16 +65,15 @@ const webSearchTool = ai.defineTool(
     try {
       const results = await searchWeb(input.query);
       if (results.success) {
-        let formattedResults = `WEB SEARCH: ${input.query}\n\n`;
-        results.results.forEach((r, i) => {
-          formattedResults += `[${i + 1}] ${r.title}\n    ${r.url}\n    ${r.snippet}\n\n`;
+        let formattedResults = `SEARCH RESULTS for "${input.query}":\n\n`;
+        results.results.slice(0, 5).forEach((r, i) => {
+          formattedResults += `[${i + 1}] ${r.title}\n    Source: ${r.url}\n    Snippet: ${r.snippet}\n\n`;
         });
         return formattedResults.trim();
-      } else {
-        return `Search failed: ${results.error}. Try rephrasing.`;
       }
+      return `Search failed: ${results.error || 'No results found.'}`;
     } catch (error: any) {
-      return `Search failed: ${error.message || String(error)}. Try rephrasing.`;
+      return `Search error: ${error.message}`;
     }
   }
 );
@@ -81,24 +81,22 @@ const webSearchTool = ai.defineTool(
 const runCodeTool = ai.defineTool(
   {
     name: 'run_code',
-    description: 'Execute JavaScript code and return the output. Use for calculations, data processing, algorithms, generating sequences, sorting, string manipulation.',
+    description: 'Execute JavaScript code for complex logic, algorithms, or data processing.',
     inputSchema: z.object({
-      code: z.string().describe('JavaScript code to run'),
-      description: z.string().describe('What this code does (for context)'),
+      code: z.string().describe('Self-contained JavaScript code'),
+      description: z.string().describe('What this code is intended to solve'),
     }),
     outputSchema: z.string(),
   },
   async (input) => {
     try {
-      const result = await runCode(input.code, 'javascript');
+      const result = await runCode(input.code);
       if (result.success) {
-        const output = String(result.output).substring(0, CODE_MAX_OUTPUT_CHARS);
-        return `CODE: ${input.description}\n\n${input.code}\n\nOUTPUT:\n${output}`;
-      } else {
-        return `CODE ERROR: ${result.error}\nCode was:\n${input.code}`;
+        return `CODE EXECUTION (${input.description}):\n\nOUTPUT:\n${result.output.substring(0, CODE_MAX_OUTPUT_CHARS)}`;
       }
+      return `CODE ERROR: ${result.error}\nCode: ${input.code}`;
     } catch (error: any) {
-      return `CODE EXECUTION ERROR: ${error.message || String(error)}\nCode was:\n${input.code}`;
+      return `EXECUTION FAILED: ${error.message}`;
     }
   }
 );
@@ -106,50 +104,23 @@ const runCodeTool = ai.defineTool(
 const calculateTool = ai.defineTool(
   {
     name: 'calculate',
-    description: 'Evaluate mathematical expressions. Use for arithmetic, percentages, compound interest, unit conversion, statistical calculations.',
+    description: 'Evaluate mathematical expressions accurately.',
     inputSchema: z.object({
-      expression: z.string().describe('Math expression to evaluate'),
+      expression: z.string().describe('Math expression (e.g., "1000 * (1 + 0.05)^10")'),
     }),
     outputSchema: z.string(),
   },
   async (input) => {
     try {
-      let expression = input.expression.toLowerCase();
-
-      // Replace common patterns for Math functions and constants
-      expression = expression.replace(/sqrt\(/g, 'Math.sqrt(');
-      expression = expression.replace(/log\(/g, 'Math.log(');
-      expression = expression.replace(/pi/g, 'Math.PI');
-      expression = expression.replace(/e/g, 'Math.E');
-      expression = expression.replace(/sin\(/g, 'Math.sin(');
-      expression = expression.replace(/cos\(/g, 'Math.cos(');
-      expression = expression.replace(/abs\(/g, 'Math.abs(');
-      expression = expression.replace(/round\(/g, 'Math.round(');
-      expression = expression.replace(/floor\(/g, 'Math.floor(');
-      expression = expression.replace(/ceil\(/g, 'Math.ceil(');
-      expression = expression.replace(/pow\(/g, 'Math.pow(');
-
-      // Basic security: Whitelist characters allowed in the expression
-      const allowedCharsRegex = /^[0-9+\-*/().%\s\w\[\]]+$/;
-      if (!allowedCharsRegex.test(expression)) {
-        throw new Error('Expression contains disallowed characters.');
-      }
-
-      // Further restrict function calls for safety
-      const restrictedKeywords = /(\b(?!Math\.(sqrt|log|sin|cos|abs|round|floor|ceil|pow|PI|E))\w+\b)/g;
-      if (restrictedKeywords.test(expression)) {
-          throw new Error('Expression contains disallowed keywords or functions.');
-      }
-
-      const result = new Function('return ' + expression)();
-
-      if (typeof result !== 'number' && typeof result !== 'bigint') {
-        throw new Error('Result is not a number.');
-      }
-
+      // Basic sanitization
+      const cleanExpr = input.expression.replace(/[^-0-9+*/().%^ \t]/g, '');
+      // Handle power operator
+      const finalExpr = cleanExpr.replace(/\^/g, '**');
+      
+      const result = new Function(`return (${finalExpr})`)();
       return `CALCULATION: ${input.expression} = ${result}`;
     } catch (error: any) {
-      return `CALCULATION ERROR: ${input.expression} — ${error.message || String(error)}`;
+      return `MATH ERROR: ${error.message}`;
     }
   }
 );
@@ -157,24 +128,19 @@ const calculateTool = ai.defineTool(
 const summarizeTool = ai.defineTool(
   {
     name: 'summarize',
-    description: 'Summarize long text into key bullet points. Use after web search results to condense before reasoning. Use for any text over 500 characters.',
+    description: 'Condense long text into bullet points.',
     inputSchema: z.object({
-      text: z.string().describe('Text to summarize'),
-      focus: z.string().describe('What aspect to focus on'),
+      text: z.string().describe('Content to summarize'),
+      focus: z.string().optional().describe('Specific theme to focus on'),
     }),
     outputSchema: z.string(),
   },
   async (input) => {
-    if (input.text.length < 400) {
-      return `TEXT (short, no summary needed):\n${input.text}`;
-    }
-
-    const promptText = `Summarize in 4 bullet points focusing on ${input.focus}:\n${input.text}`;
     const { output } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
-      prompt: promptText,
+      prompt: `Summarize the following text, focusing on ${input.focus || 'the key takeaways'}:\n\n${input.text}`,
+      config: { temperature: 0.3 }
     });
-    return `SUMMARY (focus: ${input.focus}):\n${output}`;
+    return `SUMMARY:\n${output}`;
   }
 );
 
@@ -187,36 +153,31 @@ const autonomousAgentExecutionFlow = ai.defineFlow(
     outputSchema: AutonomousAgentExecutionOutputSchema,
   },
   async (input) => {
+    const startTime = Date.now();
     let messages: MessagePart[] = [
-      { role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\nTask: ' + input.task }] },
+      { role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\nTASK: ' + input.task }] },
     ];
     let toolCallCount = 0;
     let iterationCount = 0;
-    const startTime = Date.now();
-    let finalAnswer = 'Agent reached maximum iterations. No final answer was produced.';
+    let finalAnswer = 'Agent failed to reach a conclusion within the iteration limit.';
+
+    const tools = [webSearchTool, runCodeTool, calculateTool, summarizeTool];
 
     for (let i = 0; i < MAX_AGENT_ITERATIONS; i++) {
       iterationCount++;
 
-      const { output, stream } = await ai.generateStream({
+      const response = await ai.generate({
         model: 'googleai/gemini-1.5-pro',
         contents: messages,
-        tools: [webSearchTool, runCodeTool, calculateTool, summarizeTool],
-        config: { temperature: 0.1, maxOutputTokens: 2048 },
+        tools,
+        config: { temperature: 0.2 },
       });
 
-      let streamedText = '';
-      for await (const chunk of stream) {
-        if (chunk.text) {
-          streamedText += chunk.text;
-        }
-      }
-      await output;
-
-      messages.push({ role: 'model', parts: output.contents });
+      const contents = response.contents;
+      messages.push({ role: 'model', parts: contents });
 
       const functionCalls: FunctionCallPart[] = [];
-      output.contents.forEach(part => {
+      contents.forEach(part => {
         if ('functionCall' in part && part.functionCall) {
           functionCalls.push(part.functionCall);
         }
@@ -225,46 +186,36 @@ const autonomousAgentExecutionFlow = ai.defineFlow(
       if (functionCalls.length > 0) {
         toolCallCount += functionCalls.length;
         for (const call of functionCalls) {
-          const tool = [webSearchTool, runCodeTool, calculateTool, summarizeTool].find(t => t.name === call.name);
+          const tool = tools.find(t => t.name === call.name);
           if (tool) {
-            const toolResult = await tool.execute(call.args);
+            const result = await tool.execute(call.args);
             messages.push({
               role: 'user',
               parts: [{
                 functionResponse: {
                   name: call.name,
-                  response: { result: toolResult },
-                },
-              }],
-            });
-          } else {
-            const errorMsg = `Tool '${call.name}' not found.`;
-            messages.push({
-              role: 'user',
-              parts: [{
-                functionResponse: {
-                  name: call.name,
-                  response: { error: errorMsg },
+                  response: { result },
                 },
               }],
             });
           }
         }
-      } else if (streamedText.includes('FINAL ANSWER:')) {
-        finalAnswer = streamedText.substring(streamedText.indexOf('FINAL ANSWER:') + 'FINAL ANSWER:'.length).trim();
-        break;
-      } else if (i === MAX_AGENT_ITERATIONS - 1) {
-        finalAnswer = 'Agent reached maximum iterations. Here is what was found so far:\n' + streamedText.trim();
+      } else {
+        const textOutput = response.text;
+        if (textOutput.includes('FINAL ANSWER:')) {
+          finalAnswer = textOutput.split('FINAL ANSWER:')[1].trim();
+          break;
+        } else if (i === MAX_AGENT_ITERATIONS - 1) {
+          finalAnswer = textOutput.trim();
+        }
       }
     }
-
-    const elapsedMs = Date.now() - startTime;
 
     return {
       finalAnswer,
       toolCallCount,
       iterationCount,
-      elapsedMs,
+      elapsedMs: Date.now() - startTime,
     };
   }
 );

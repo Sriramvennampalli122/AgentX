@@ -1,0 +1,10 @@
+{
+  "placeholderImages": [
+    {
+      "id": "agent-bg",
+      "description": "Abstract futuristic terminal background",
+      "imageUrl": "https://picsum.photos/seed/agent-terminal/1200/800",
+      "imageHint": "futuristic technology"
+    }
+  ]
+}
