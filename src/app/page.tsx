@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/agent/Sidebar';
 import { TaskInput } from '@/components/agent/TaskInput';
 import { ExecutionPanel } from '@/components/agent/ExecutionPanel';
 import { Logo } from '@/components/agent/Logo';
+import { Button } from '@/components/ui/button';
 import { sessionStore, type Session, type Message } from '@/lib/session-store';
 import { executeAgentTask } from './actions/agent';
 import { useToast } from '@/hooks/use-toast';
