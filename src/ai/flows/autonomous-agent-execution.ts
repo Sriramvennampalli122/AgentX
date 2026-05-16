@@ -25,6 +25,11 @@ Operational Guidelines:
 4. **Report**: Compile all findings into a professional, well-formatted report.
 5. **Finality**: Once the task is complete, prefix your conclusion with "FINAL ANSWER:".
 
+CRITICAL TOOL CALLING RULES:
+- You must output tool calls EXACTLY as standard JSON objects with 'name' and 'arguments'.
+- NEVER put the JSON arguments inside the tool name string. The tool name must be exactly "web_search", "run_code", "calculate", or "summarize".
+- Do not make up tool names.
+
 Always strive for clarity and depth in your final response.`;
 
 const MAX_AGENT_ITERATIONS = 12;
