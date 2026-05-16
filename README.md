@@ -3,6 +3,10 @@
 
 AgentX is a production-ready autonomous reasoning terminal. Built with Google Gemini and Next.js, it orchestrates complex tasks across web search, sandboxed code execution, and precision calculation tools.
 
+## 🎥 Demo
+
+<video src="demo.mp4" controls="controls" muted="muted" style="max-width: 100%;"></video>
+
 ## 🚀 Architecture
 
 ```
