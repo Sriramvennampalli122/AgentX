@@ -122,7 +122,7 @@ export async function autonomousAgentExecution(input: AutonomousAgentExecutionIn
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama3-groq-70b-8192-tool-use-preview',
+        model: 'llama-3.3-70b-versatile',
         messages,
         tools: groqTools,
         tool_choice: 'auto',
