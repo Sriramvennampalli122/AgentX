@@ -1,35 +1,42 @@
-# Interactive Cyber Threat Visualization Dashboard
+# ⚡ AgentX — Multi-Tool AI Agent
 
-This dashboard provides a centralized interface to analyze attack patterns, identify vulnerabilities, and visualize threat intelligence through interactive maps and data analytics.
+AgentX is a production-ready autonomous reasoning terminal. Built with Google Gemini and Next.js, it orchestrates complex tasks across web search, sandboxed code execution, and precision calculation tools to act as your intelligent coding and research assistant.
 
-**Live Demo:** [https://secure-view-pulse.vercel.app/](https://secure-view-pulse.vercel.app/)
+**Live Demo:** [Deployed on Vercel]
 
 ## 🎥 Demo Video
 
-<video src="https://github.com/user-attachments/assets/2aacf15c-83e1-41ab-834a-740a8e370a6c" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 100%;"></video>
+<video src="https://github.com/Sriramvennampalli122/AgentX/raw/main/demo.mp4" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 100%;"></video>
 
 ## 🚀 Features
 
-- **Real-time Threat Map:** Interactive global visualization of active cyber attacks.
-- **Dynamic Analytics:** Visual representation of threat levels, attack types, and geographic hotspots.
-- **Secure Monitoring:** A robust monitoring system designed to provide actionable insights into network security.
-- **Responsive Design:** Optimized for various devices using modern UI/UX principles.
+- **Autonomous Reasoning Engine:** Independent planning and execution using a multi-step tool-calling loop.
+- **Live Progress Tracking:** Real-time visualization of "thinking" steps, tool triggers, and results.
+- **Sandboxed Execution:** Execution of agent-generated JavaScript in an isolated scope for algorithmic verification.
+- **Multi-Source Web Search:** Real-time web scraping and summarization for up-to-the-minute facts using DuckDuckGo.
+- **Precision Math:** Tool-based calculation to prevent LLM arithmetic hallucinations.
+- **Session History:** Persistent local archiving of all agent tasks and synthesis.
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** React.js, Tailwind CSS, Framer Motion
-- **Backend:** Node.js, Express
-- **Data Visualization:** Recharts, React-Leaflet / Mapbox
-- **Deployment:** Vercel (Frontend)
+- **Frontend:** Next.js (React), Tailwind CSS, Lucide Icons
+- **Backend:** Node.js, Next.js Server Actions
+- **AI Models:** Groq (Llama 3), Google Gemini
+- **Data Parsing:** Cheerio (Web Scraping)
+- **Deployment:** Vercel
 
 ## 📂 Project Structure
 
 ```plaintext
-├── frontend/        # React application and UI components
-├── backend/         # API services and data processing
+├── src/ai/          # Autonomous agent logic, flows, and API integrations
+├── src/app/         # Next.js App Router pages and Server Actions
+├── src/components/  # React UI components (Execution Panel, etc.)
+├── src/lib/tools/   # Standalone agent tools (web search, code runner)
 └── README.md        # Project documentation
 ```
 
 ## 🛡️ Security & Privacy
 
-This dashboard is designed for visualization and educational purposes. It uses simulated or aggregated threat data feeds to demonstrate how real-world SOC (Security Operations Center) dashboards function.
+- **Isolated Runtime:** Code execution happens in a restricted function scope with whitelisted globals to prevent malicious access.
+- **Input Sanitization:** Search queries and code strings are validated and length-limited.
+- **Privacy First:** Tasks and history are stored locally in the browser's storage by default.
