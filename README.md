@@ -5,7 +5,7 @@ AgentX is a production-ready autonomous reasoning terminal. Built with Google Ge
 
 ## 🎥 Demo
 
-<video src="https://github.com/Sriramvennampalli122/AgentX/raw/main/demo.mp4" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 100%;"></video>
+https://github.com/Sriramvennampalli122/AgentX/raw/main/demo.mp4
 
 ## 🚀 Architecture
 
