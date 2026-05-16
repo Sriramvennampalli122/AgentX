@@ -19,7 +19,7 @@ export default function AgentXDashboard() {
   const [activeEngine, setActiveEngine] = useState<'research' | 'code'>('research');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [stats, setStats] = useState<{ tools: number; iterations: number; elapsed: string }>();
+  const [stats, setStats] = useState<{ tools: number; iterations: number; elapsed: string } | undefined>(undefined);
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
 

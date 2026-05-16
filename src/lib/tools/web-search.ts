@@ -1,5 +1,5 @@
-
 'use server';
+import * as cheerio from 'cheerio';
 
 export interface SearchResult {
   title: string;
@@ -14,48 +14,50 @@ export interface WebSearchResponse {
 }
 
 /**
- * Simulates a web search using the DuckDuckGo API (Instant Answers) 
- * for prototype purposes, providing real-ish data.
+ * Performs a web search by scraping the DuckDuckGo HTML lite version.
  */
 export async function searchWeb(query: string): Promise<WebSearchResponse> {
   try {
-    const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
+    const response = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`);
     
     if (!response.ok) {
       throw new Error(`Search request failed with status ${response.status}`);
     }
 
-    const data = await response.json();
+    const html = await response.text();
+    const $ = cheerio.load(html);
     const results: SearchResult[] = [];
 
-    // Map Abstract info
-    if (data.AbstractText) {
-      results.push({
-        title: data.Heading || 'Main Result',
-        url: data.AbstractURL || '',
-        snippet: data.AbstractText
-      });
-    }
+    $('.result').each((i, el) => {
+      if (results.length >= 10) return; // Limit to top 10 results
+      
+      const title = $(el).find('.result__title a').text().trim();
+      let url = $(el).find('.result__title a').attr('href') || '';
+      
+      if (url && url.startsWith('//duckduckgo.com/l/?uddg=')) {
+          try {
+            url = decodeURIComponent(url.split('uddg=')[1].split('&')[0]);
+          } catch (e) {
+            // Keep original if decoding fails
+          }
+      }
+      
+      const snippet = $(el).find('.result__snippet').text().trim();
+      
+      if (title && snippet) {
+        results.push({
+          title,
+          url,
+          snippet
+        });
+      }
+    });
 
-    // Map Related Topics
-    if (data.RelatedTopics && Array.isArray(data.RelatedTopics)) {
-      data.RelatedTopics.slice(0, 5).forEach((topic: any) => {
-        if (topic.Text && topic.FirstURL) {
-          results.push({
-            title: topic.Text.split(' - ')[0] || 'Related Topic',
-            url: topic.FirstURL,
-            snippet: topic.Text
-          });
-        }
-      });
-    }
-
-    // Fallback mock results if API returns nothing specific for niche queries
     if (results.length === 0) {
       results.push({
         title: `Search results for: ${query}`,
         url: 'https://duckduckgo.com',
-        snippet: `No specific instant answers found for "${query}". Please check the main search engine for more detailed web results.`
+        snippet: `No specific results found for "${query}". Please check the main search engine for more detailed web results.`
       });
     }
 
